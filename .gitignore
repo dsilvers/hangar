@@ -1,0 +1,14 @@
+.vagrant
+*.log
+*.pyc
+settings_local.py
+.DS_Store
+*#*
+*.swp
+media/*
+*/migrations/*
+.idea
+*.db
+*.sqlite3
+
+settings_local.py

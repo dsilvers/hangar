@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>Hangar #9</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+  <script
+    src="https://code.jquery.com/jquery-3.1.1.min.js"
+    integrity="sha256-hVVnYaiADRTO2PzUGmuLJr8BLUSjGIZsDYGmIJLv2b8="
+    crossorigin="anonymous"></script>
+<!-- Latest compiled and minified CSS -->
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+
+<!-- Optional theme -->
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css" integrity="sha384-rHyoN1iRsVXV4nD0JutlnGaslCJuC7uwjduW9SVrLvRYooPp2bWYgmgJQIXwl/Sp" crossorigin="anonymous">
+  <link href="https://gitcdn.github.io/bootstrap-toggle/2.2.2/css/bootstrap-toggle.min.css" rel="stylesheet">
+  <script src="https://gitcdn.github.io/bootstrap-toggle/2.2.2/js/bootstrap-toggle.min.js"></script>
+
+  <script src="https://js.pusher.com/3.2/pusher.min.js"></script>
+  <script>
+    var pusher = new Pusher('{{ PUSHER_APP_KEY }}', {
+      encrypted: true
+    });
+
+    var channel = pusher.subscribe('hangar-status');
+    channel.bind('switches', function(data) {
+      node = $('#' + data.name + "_switch")
+      if(node) {
+        if(data.state == "1")
+          node.data("bs.toggle").on(true);
+        else
+          node.data("bs.toggle").off(true);
+      }
+    });
+    channel.bind('probes', function(data) {
+      for(var i = 0; i < data.length; i++) {
+        $('#' + data[i].name + '_temp').html(c2f(data[i].temperature));
+      }
+    });
+
+    $(function() {
+      $('.switchbox').change(function() {
+        $.get('/control/' + $(this).prop('name') + '/' + ($(this).prop('checked') ? 1 : 0));
+      })
+    })
+
+    function c2f(temp_c) {
+      return Math.round(temp_c * 1.8 + 32, 1);
+    }
+  </script>
+  <style type="text/css">
+  .temps {
+    font-size: 2em;
+    font-weight: bold;
+  }
+  .desc {
+    text-transform: uppercase;
+    color: #4e4e4e;
+    font-size: .4em;
+    font-weight: normal;
+  }
+  </style>
+</head>
+<body>
+  <nav class="navbar navbar-default">
+    <div class="container-fluid">
+      <div class="navbar-header">
+        <a class="navbar-brand" href="#">Hangar #9</a>
+      </div>
+    </div>
+  </nav>
+  <div class="container-fluid">
+    <div class="row text-center">
+      {% for switch in switches %}
+      <div class="col-xs-6">
+        <input id="{{ switch.name }}_switch" class="switchbox" name="{{ switch.name }}" type="checkbox" data-toggle="toggle" data-on="{{ switch.name }} On" {% if switch.state %}checked{% endif %} data-off="{{ switch.name }} Off" />
+      </div>
+      {% empty %}
+      <div class="col-xs-4">
+        No switches configured.
+      </div>
+      {% endfor %}
+    </div>
+    <div class="row" style="height:45px;">
+      <div class="col-xs-12">&nbsp;</div>
+    </div>
+    <div class="row text-center temps">
+      {% for probe in probes %}
+      <div class="col-xs-4">
+        <div id="{{ probe.name }}_temp">{{ probe.temperature|floatformat:1 }}</div>
+        <div class="desc">{{ probe.name }}</div>
+      </div>
+      {% empty %}
+      <div class="col-xs-4">
+        No temperature probes configured.
+      </div>
+      {% endfor %}
+      </div>
+    </div>
+  </div>
+</body>
+</html>
