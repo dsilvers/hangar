@@ -20,6 +20,6 @@ from heater.views import control_switch, StatusPage
 
 urlpatterns = [
     url(r'^admin/', admin.site.urls),
-    url(r'^control/(?P<name>\w+)/(?P<status>\d)$', control_switch),
+    url(r'^control/(?P<name>\w+)/(?P<state>0|1)$', control_switch),
     url(r'^$', StatusPage.as_view()),
 ]

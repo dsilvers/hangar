@@ -1,5 +1,7 @@
 from __future__ import unicode_literals
 
+from decimal import Decimal
+
 from django.db import models
 from heater.utils import bool_to_switch_state
 
@@ -7,13 +9,25 @@ from heater.utils import bool_to_switch_state
 class Switch(models.Model):
     name = models.CharField(max_length=32, unique=True)
     pin = models.CharField(max_length=32)
-    state = models.BooleanField(default=False)
     probe = models.ForeignKey("TemperatureProbe", blank=True, null=True)
     last_change = models.DateTimeField(auto_now=True)
     sequence = models.IntegerField(default=0)
 
     def __unicode__(self):
         return "{} ({})".format(self.name, bool_to_switch_state(self.state))
+
+    @property
+    def state(self):
+        try:
+            return SwitchData.objects.filter(switch=self).latest().state
+        except SwitchData.DoesNotExist:
+            return None
+
+    def set_state(self, state):
+        data = SwitchData()
+        data.switch = self
+        data.state = state
+        data.save()
 
     class Meta:
         ordering = ['sequence']
@@ -59,6 +73,14 @@ class TemperatureProbe(models.Model):
             return TemperatureData.objects.filter(probe=self).latest().temperature
         except TemperatureData.DoesNotExist:
             return None
+
+    @property
+    def temperature_c(self):
+        return self.temperature
+
+    @property
+    def temperature_f(self):
+        return (self.temperature * Decimal(1.8)) + Decimal(32.0)
 
     def __unicode__(self):
         return "{} ({})".format(self.name, self.serial)

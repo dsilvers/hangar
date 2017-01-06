@@ -1,6 +1,7 @@
-from django.shortcuts import render
-from django.http import HttpResponse
 from django.conf import settings
+from django.contrib.auth.decorators import login_required
+from django.http import HttpResponse
+from django.shortcuts import render
 from django.views.generic import View
 
 from heater.models import TemperatureProbe, Switch
@@ -9,37 +10,39 @@ import pusher
 
 
 class StatusPage(View):
-    template_name = "index.html"
-
     def get(self, request):
-        return render(request, self.template_name, { 
+        return render(request, "index.html", { 
             'PUSHER_APP_KEY': settings.PUSHER_APP_KEY,
             'probes': TemperatureProbe.objects.all(),
             'switches': Switch.objects.all(),
         })
 
 
-def control_switch(request, name, status):
 
-    try:
-        state = State.objects.filter(name=name).get()
-    except State.DoesNotExist():
-        return HttpResponse("No switch by that name, son.")
-
-
+@login_required
+def control_switch(request, name, state):
     pusher_client = pusher.Pusher(
         app_id=settings.PUSHER_APP_ID,
         key=settings.PUSHER_APP_KEY,
         secret=settings.PUSHER_APP_SECRET,
-        ssl=True
     )
 
-    pusher_client.trigger('hangar-status', 'switch-control', {
-        'name': name,
-        'status': status,
-    })
+    try:
+        switch = Switch.objects.filter(name=name).get()
+    except State.DoesNotExist():
+        return HttpResponse("No switch by that name, son.")
 
-    state.state = False if status == "0" else True
-    state.save()
+    if state == "1":
+        state = True
+    elif state == "0":
+        state = False
+    else:
+        state = None
+
+    pusher_client.trigger('hangar-status', 'switches', {
+        'name': switch.name,
+        'pin': switch.pin,
+        'state': state,
+    })
 
     return HttpResponse("OK")

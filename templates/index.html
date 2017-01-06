@@ -18,21 +18,31 @@
 
   <script src="https://js.pusher.com/3.2/pusher.min.js"></script>
   <script>
+    var is_authenticated = {% if user.is_authenticated %}true{% else %}false{% endif %};
+
     var pusher = new Pusher('{{ PUSHER_APP_KEY }}', {
       encrypted: true
     });
 
     var channel = pusher.subscribe('hangar-status');
-    channel.bind('switches', function(data) {
+    channel.bind('switch-log', function(data) {
+      console.log(data);
       node = $('#' + data.name + "_switch")
       if(node) {
-        if(data.state == "1")
+        if(!is_authenticated)
+          node.prop("disabled", false);
+
+        if(data.state)
           node.data("bs.toggle").on(true);
         else
           node.data("bs.toggle").off(true);
+
+        if(!is_authenticated)
+          node.prop("disabled", true);
       }
     });
-    channel.bind('probes', function(data) {
+    channel.bind('temperature-log', function(data) {
+      console.log(data);
       for(var i = 0; i < data.length; i++) {
         $('#' + data[i].name + '_temp').html(c2f(data[i].temperature));
       }
@@ -45,7 +55,7 @@
     })
 
     function c2f(temp_c) {
-      return Math.round(temp_c * 1.8 + 32, 1);
+      return (temp_c * 1.8 + 32.0).toFixed(1);
     }
   </script>
   <style type="text/css">
@@ -62,18 +72,50 @@
   </style>
 </head>
 <body>
-  <nav class="navbar navbar-default">
-    <div class="container-fluid">
-      <div class="navbar-header">
-        <a class="navbar-brand" href="#">Hangar #9</a>
+
+<nav class="navbar navbar-default" role="navigation">
+  <div class="navbar-collapse collapse">
+    <ul class="nav navbar-nav navbar-left">
+        <li><a href="#">Hangar #9</a></li>
+    </ul>
+    <ul class="nav navbar-nav navbar-right">
+
+    </ul>
+  </div>
+</nav>
+
+    <!-- Fixed navbar -->
+    <nav class="navbar navbar-inverse navbar-fixed-top">
+      <div class="container">
+        <div class="navbar-header">
+          <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a class="navbar-brand" href="#">Hangar #9</a>
+        </div>
+        <div id="navbar" class="navbar-collapse collapse">
+          <ul class="nav navbar-nav">
+            <li>
+              {% if not user.is_authenticated %}
+              <a href="/admin/login/?next=/">Login</a>
+              {% else %}
+              <a href="/admin/logout/?next=/">Logout</a>
+              {% endif %}
+          </li>
+          </ul>
+        </div><!--/.nav-collapse -->
       </div>
-    </div>
-  </nav>
+    </nav>
+
+ 
   <div class="container-fluid">
     <div class="row text-center">
       {% for switch in switches %}
       <div class="col-xs-6">
-        <input id="{{ switch.name }}_switch" class="switchbox" name="{{ switch.name }}" type="checkbox" data-toggle="toggle" data-on="{{ switch.name }} On" {% if switch.state %}checked{% endif %} data-off="{{ switch.name }} Off" />
+        <input id="{{ switch.name }}_switch" class="switchbox" name="{{ switch.name }}" type="checkbox" data-toggle="toggle" data-on="{{ switch.name|title }} On" {% if switch.state %}checked{% endif %} data-off="{{ switch.name|title }} Off" {% if not user.is_authenticated %}disabled{% endif %} />
       </div>
       {% empty %}
       <div class="col-xs-4">
@@ -87,7 +129,7 @@
     <div class="row text-center temps">
       {% for probe in probes %}
       <div class="col-xs-4">
-        <div id="{{ probe.name }}_temp">{{ probe.temperature|floatformat:1 }}</div>
+        <div id="{{ probe.name }}_temp">{{ probe.temperature_f|floatformat:1 }}</div>
         <div class="desc">{{ probe.name }}</div>
       </div>
       {% empty %}
