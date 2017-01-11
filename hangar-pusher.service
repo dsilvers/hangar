@@ -7,7 +7,20 @@ User=dan
 Group=dan
 
 WorkingDirectory=/home/dan/hangar
-ExecStart=/home/dan/.virtualenvs/hangar/bin/python runscript server-websocket-receiver
+ExecStart=/home/dan/.virtualenvs/hangar/bin/python manage.py runscript server-websocket-receiver
 
 [Install]
 WantedBy=multi-user.target
+
+
+
+
+
+
+[program:madwreckindolls]
+command=/home/mwd/.virtualenvs/mwd/bin/gunicorn mwd.wsgi:application -c /home/mwd/madwreckindolls.com/mwd/gunicorn.conf.py
+directory=/home/mwd/madwreckindolls.com/
+user=mwd
+autostart=true
+autorestart=true
+redirect_stderr=true
