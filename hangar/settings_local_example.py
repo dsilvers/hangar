@@ -22,3 +22,7 @@ PUSHER_APP_ID = ''
 PUSHER_APP_KEY = ''
 PUSHER_APP_SECRET = ''
 
+
+# Temperatures go stale after 15 minutes
+TEMPERATURE_STALENESS = 15*60
+

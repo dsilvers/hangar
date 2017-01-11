@@ -129,7 +129,15 @@
     <div class="row text-center temps">
       {% for probe in probes %}
       <div class="col-xs-4">
-        <div id="{{ probe.name }}_temp">{{ probe.temperature_f|floatformat:1 }}</div>
+        <div id="{{ probe.name }}_temp">
+          {% if probe.temperature is False %}
+              X
+          {% elif probe.temperature is None %}
+              ?
+          {% else %}
+            {{ probe.temperature_f|floatformat:1 }}
+          {% endif %}
+        </div>
         <div class="desc">{{ probe.name }}</div>
       </div>
       {% empty %}

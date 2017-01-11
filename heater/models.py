@@ -1,7 +1,9 @@
 from __future__ import unicode_literals
 
+from datetime import datetime, timedelta
 from decimal import Decimal
 
+from django.conf import settings
 from django.db import models
 from heater.utils import bool_to_switch_state
 
@@ -70,9 +72,14 @@ class TemperatureProbe(models.Model):
     @property
     def temperature(self):
         try:
-            return TemperatureData.objects.filter(probe=self).latest().temperature
+            t = TemperatureData.objects.filter(probe=self).latest()
         except TemperatureData.DoesNotExist:
             return None
+
+        if datetime.now() - t.timestamp > settings.TEMPERATURE_STALENESS:
+            return False
+
+        return t.temperature
 
     @property
     def temperature_c(self):

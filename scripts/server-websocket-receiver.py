@@ -98,6 +98,7 @@ def connect_handler(data):
     channel.bind('switch-log', receive_switch_log)
     channel.bind('setup-request', receive_setup_request)
     logging.info("Connected to pusher")
+    receive_setup_request(None)
 
 
 pusher = pusherclient.Pusher(settings.PUSHER_APP_KEY)
