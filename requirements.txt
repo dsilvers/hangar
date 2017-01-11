@@ -1,5 +1,5 @@
-Django==1.10.2
-django-extensions==1.7.5
-pusher==1.6
-pusherclient==0.3.0
-uWSGI==2.0.14
+Django==1.10.5
+django-extensions
+pusher
+pusherclient
+uWSGI
