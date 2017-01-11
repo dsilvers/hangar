@@ -1,10 +1,11 @@
 from __future__ import unicode_literals
 
-from datetime import datetime, timedelta
+from datetime import timedelta
 from decimal import Decimal
 
 from django.conf import settings
 from django.db import models
+from django.utils import timezone
 from heater.utils import bool_to_switch_state
 
 
@@ -76,7 +77,7 @@ class TemperatureProbe(models.Model):
         except TemperatureData.DoesNotExist:
             return None
 
-        if datetime.now() - t.timestamp > settings.TEMPERATURE_STALENESS:
+        if timezone.now() - t.timestamp > settings.TEMPERATURE_STALENESS:
             return False
 
         return t.temperature
