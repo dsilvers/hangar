@@ -77,7 +77,7 @@ class TemperatureProbe(models.Model):
         except TemperatureData.DoesNotExist:
             return None
 
-        if timezone.now() - t.timestamp > settings.TEMPERATURE_STALENESS:
+        if (timezone.now() - t.timestamp).total_seconds() > settings.TEMPERATURE_STALENESS:
             return False
 
         return t.temperature
