@@ -1,0 +1,13 @@
+[Unit]
+Description=websocket receiver/sender daemon
+After=network.target
+
+[Service]
+User=dan
+Group=dan
+
+WorkingDirectory=/home/dan/hangar
+ExecStart=/home/dan/.virtualenvs/hangar/bin/python runscript server-websocket-receiver
+
+[Install]
+WantedBy=multi-user.target

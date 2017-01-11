@@ -1,0 +1,13 @@
+[Unit]
+Description=gunicorn daemon
+After=network.target
+
+[Service]
+User=dan
+Group=dan
+
+WorkingDirectory=/home/dan/hangar
+ExecStart=/home/dan/.virtualenvs/hangar/bin/gunicorn --workers 1 --bind localhost:10001 hangar.wsgi:application
+
+[Install]
+WantedBy=multi-user.target
