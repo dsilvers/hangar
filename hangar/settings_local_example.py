@@ -26,3 +26,7 @@ PUSHER_APP_SECRET = ''
 # Temperatures go stale after 15 minutes
 TEMPERATURE_STALENESS = 15*60
 
+
+# Airport to query for ocal weather
+AIRPORT = "KMSN"
+

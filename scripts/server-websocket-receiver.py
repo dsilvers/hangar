@@ -3,6 +3,8 @@ import pusherclient
 import time
 import sys
 import json
+from urllib2 import urlopen
+from metar import Metar
 
 from django.conf import settings
 from heater.models import Switch, TemperatureProbe, TemperatureData
@@ -20,6 +22,45 @@ pusher_client = pusher.Pusher(
     key = settings.PUSHER_APP_KEY,
     secret = settings.PUSHER_APP_SECRET,
 )
+
+
+def send_airport_metar():
+    if not settings.AIRPORT:
+        logging.info("Airport ID not set, unable to grab METAR")
+        return
+
+    BASE_URL = "http://tgftp.nws.noaa.gov/data/observations/metar/stations"
+    url = "%s/%s.TXT" % (BASE_URL, settings.AIRPORT)
+
+    try:
+        urlh = urlopen(url)
+        for line in urlh:
+            if line.startswith(settings.AIRPORT):
+                obs = Metar.Metar(line)
+                break
+    except Metar.ParserError:
+        logging.info("Unable to parse METAR")
+        return
+    except:
+        logging.info("Unable to parse METAR")
+        return
+
+    temperature = obs.temp.string().replace(" C", "")
+
+    probe_data = []
+    probe_data.append({
+        'name': settings.AIRPORT,
+        'serial': settings.AIRPORT,
+        'temperature':  temperature,
+    })
+    logging.info("Probe {} on {} has temperature of {}'C".format(
+        settings.AIRPORT,
+        settings.AIRPORT],
+        temperature,
+    ))
+
+    pusher_client.trigger(['hangar-status'], 'temperature-log', probe_data)
+
 
 def receive_temperature_log(data):
     data = json.loads(data)
@@ -109,3 +150,7 @@ def run():
     while True:
         # Do other things in the meantime here...
         time.sleep(10)
+        # Grab a METAR
+        send_airport_metar()
+        time.sleep(20*60)
+

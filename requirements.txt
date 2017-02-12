@@ -1,5 +1,6 @@
 Django==1.10.5
 django-extensions
 gunicorn
+metar
 pusher
 pusherclient
