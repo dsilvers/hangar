@@ -55,7 +55,7 @@ def send_airport_metar():
     })
     logging.info("Probe {} on {} has temperature of {}'C".format(
         settings.AIRPORT,
-        settings.AIRPORT],
+        settings.AIRPORT,
         temperature,
     ))
 
