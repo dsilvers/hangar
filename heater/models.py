@@ -69,6 +69,7 @@ class TemperatureProbe(models.Model):
     name = models.CharField(max_length=32)
     serial = models.CharField(max_length=32, unique=True)
     sequence = models.IntegerField(default=0)
+    offset = models.DecimalField(max_digits=4, decimal_places=2, default=0.0)
 
     @property
     def temperature(self):
@@ -80,7 +81,7 @@ class TemperatureProbe(models.Model):
         if (timezone.now() - t.timestamp).total_seconds() > settings.TEMPERATURE_STALENESS:
             return False
 
-        return t.temperature
+        return t.temperature + self.offset
 
     @property
     def temperature_c(self):
