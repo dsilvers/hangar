@@ -15,22 +15,20 @@ class Switch(models.Model):
     probe = models.ForeignKey("TemperatureProbe", blank=True, null=True)
     last_change = models.DateTimeField(auto_now=True)
     sequence = models.IntegerField(default=0)
+    state = models.BooleanField(default=False)
 
     def __unicode__(self):
         return "{} ({})".format(self.name, bool_to_switch_state(self.state))
 
-    @property
-    def state(self):
-        try:
-            return SwitchData.objects.filter(switch=self).latest().state
-        except SwitchData.DoesNotExist:
-            return None
 
     def set_state(self, state):
         data = SwitchData()
         data.switch = self
         data.state = state
         data.save()
+
+        self.state = state
+        self.save()
 
     class Meta:
         ordering = ['sequence']
@@ -70,18 +68,15 @@ class TemperatureProbe(models.Model):
     serial = models.CharField(max_length=32, unique=True)
     sequence = models.IntegerField(default=0)
     offset = models.DecimalField(max_digits=4, decimal_places=2, default=0.0)
+    current_temperature = models.DecimalField(max_digits=6, decimal_places=3, default=0.0)
+    current_temperature_timestamp = models.DateTimeField()
 
     @property
     def temperature(self):
-        try:
-            t = TemperatureData.objects.filter(probe=self).latest()
-        except TemperatureData.DoesNotExist:
-            return None
-
-        if (timezone.now() - t.timestamp).total_seconds() > settings.TEMPERATURE_STALENESS:
+        if (timezone.now() - self.current_temperature_timestamp).total_seconds() > settings.TEMPERATURE_STALENESS:
             return False
 
-        return t.temperature + self.offset
+        return self.current_temperature + self.offset
 
     @property
     def temperature_c(self):

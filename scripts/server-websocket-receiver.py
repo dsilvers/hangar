@@ -7,6 +7,7 @@ from urllib2 import urlopen
 from metar import Metar
 
 from django.conf import settings
+from django.utils import timezone
 from heater.models import Switch, TemperatureProbe, TemperatureData
 from heater.utils import bool_to_switch_state
 
@@ -78,6 +79,10 @@ def receive_temperature_log(data):
             probe_temp.probe = probe
             probe_temp.temperature = probe_data['temperature']
             probe_temp.save()
+
+            probe.current_temperature = probe_data['temperature']
+            probe.current_temperature_timestamp = timezone.now()
+            probe.save()
 
             logging.info("Probe temperature log: {} ({}) is {}".format(
                 probe.name,
